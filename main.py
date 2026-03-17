@@ -118,16 +118,6 @@ def stats(session: Session = Depends(get_session)):
     return {"counts": counts, "average_prices": averages}
 
 
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request, session: Session = Depends(get_session)):
-    rows = session.exec(select(MachineRecord)).all()
-    top = rows[:50]
-
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "rows": top,
-            "title": "Preço de Máquinas Públicas",
-        },
-    )
+@app.get("/")
+def home():
+    return {"status": "ok"}
