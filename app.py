@@ -1,20 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from dados import dados_maquinas
 
 app = FastAPI()
-
-dados = [
-    {
-        "item": "Caminhão Basculante",
-        "municipio": "Ibiporã",
-        "valor": 480000
-    },
-    {
-        "item": "Retroescavadeira",
-        "municipio": "Londrina",
-        "valor": 320000
-    }
-]
 
 @app.get("/health")
 def health():
@@ -22,12 +10,12 @@ def health():
 
 @app.get("/maquinas")
 def maquinas():
-    return dados
+    return dados_maquinas
 
 @app.get("/", response_class=HTMLResponse)
 def home():
     linhas = ""
-    for d in dados:
+    for d in dados_maquinas:
         linhas += f"""
         <tr>
             <td>{d['item']}</td>
