@@ -2,6 +2,7 @@ from datetime import datetime, date
 from typing import Optional
 from sqlmodel import SQLModel, Field
 
+
 class MachineRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     source: str = Field(index=True)
@@ -12,7 +13,7 @@ class MachineRecord(SQLModel, table=True):
     organ_name: str = Field(index=True)
     municipality: Optional[str] = Field(default=None, index=True)
     supplier_name: Optional[str] = None
-    contract_type: str = Field(index=True)  # ata or compra
+    contract_type: str = Field(index=True)  # "ata" ou "compra"
     process_number: Optional[str] = None
     ata_number: Optional[str] = None
     purchase_year: Optional[int] = Field(default=None, index=True)
