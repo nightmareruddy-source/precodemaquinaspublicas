@@ -8,8 +8,13 @@ app = FastAPI()
 def health():
     return {"status": "ok"}
 
+from fastapi import Query
+
 @app.get("/maquinas")
-def maquinas():
+def maquinas(tipo: str = Query(default=None)):
+    if tipo:
+        filtrado = [d for d in dados_maquinas if tipo.lower() in d["item"].lower()]
+        return filtrado
     return dados_maquinas
 
 @app.get("/", response_class=HTMLResponse)
