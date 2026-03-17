@@ -9,3 +9,18 @@ def home():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/maquinas")
+def maquinas():
+    return [
+        {
+            "item": "Caminhão Basculante",
+            "municipio": "Ibiporã",
+            "valor": 480000
+        },
+        {
+            "item": "Retroescavadeira",
+            "municipio": "Londrina",
+            "valor": 320000
+        }
+    ]
