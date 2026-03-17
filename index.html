@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f7f7f7; color: #222; }
+    header { background: #111827; color: #fff; padding: 24px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#e5e7eb; font-size:12px; }
+    .search-box { display:flex; gap:8px; margin-bottom: 18px; }
+    input { flex:1; padding:12px; border-radius:8px; border:1px solid #d1d5db; }
+    button { padding:12px 16px; border:none; border-radius:8px; background:#2563eb; color:#fff; cursor:pointer; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Preço de Máquinas Públicas</h1>
+  <p>Consulta de atas e preços históricos para linha amarela e caminhões.</p>
+</header>
+<main>
+  <div class="card">
+    <div class="search-box">
+      <input id="q" type="text" placeholder="Ex.: escavadeira hidráulica, caminhão caçamba" />
+      <button onclick="runSearch()">Buscar</button>
+    </div>
+    <div id="result-info"></div>
+  </div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Item</th>
+          <th>Órgão</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.item_category }}</td>
+          <td>{{ row.item_name }}</td>
+          <td>{{ row.organ_name }}</td>
+          <td>{{ row.contract_type }}</td>
+          <td>{% if row.amount_brl %}R$ {{ "%.2f"|format(row.amount_brl) }}{% else %}-{% endif %}</td>
+          <td><span class="pill">{{ row.status }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+<script>
+async function runSearch() {
+  const q = document.getElementById('q').value.trim();
+  const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+  document.getElementById('result-info').innerText = `${data.length} resultado(s)`;
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  for (const row of data) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.item_category ?? ''}</td>
+      <td>${row.item_name ?? ''}</td>
+      <td>${row.organ_name ?? ''}</td>
+      <td>${row.contract_type ?? ''}</td>
+      <td>${row.amount_brl ? 'R$ ' + Number(row.amount_brl).toFixed(2) : '-'}</td>
+      <td><span class="pill">${row.status ?? ''}</span></td>`;
+    tbody.appendChild(tr);
+  }
+}
+</script>
+</body>
+</html>
