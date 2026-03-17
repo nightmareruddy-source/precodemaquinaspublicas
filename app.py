@@ -32,7 +32,6 @@ def maquinas(tipo: str = Query(default=None)):
     return dados_maquinas
 
 # ===== TELA HTML SIMPLES =====
-
 @app.get("/tabela", response_class=HTMLResponse)
 def tabela():
     html = """
@@ -41,34 +40,63 @@ def tabela():
             <title>Preço de Máquinas Públicas</title>
             <style>
                 body { font-family: Arial; padding: 20px; }
-                table { border-collapse: collapse; width: 60%; }
+                table { border-collapse: collapse; width: 80%; margin-top: 20px; }
                 th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
                 th { background-color: #eee; }
+                input { padding: 5px; }
+                button { padding: 6px 10px; }
             </style>
         </head>
         <body>
             <h2>Preço de Máquinas Públicas</h2>
-            <table>
-                <tr>
-                    <th>Item</th>
-                    <th>Município</th>
-                    <th>Valor</th>
-                </tr>
-    """
 
-    for d in dados_maquinas:
-        html += f"""
-        <tr>
-            <td>{d['item']}</td>
-            <td>{d['municipio']}</td>
-            <td>R$ {d['valor']:,}</td>
-        </tr>
-        """
+            <input type="text" id="filtro" placeholder="Ex: retro, caminhão">
+            <button onclick="filtrar()">Filtrar</button>
 
-    html += """
+            <table id="tabela">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Município</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
             </table>
+
+            <script>
+                async function carregar() {
+                    const res = await fetch('/maquinas');
+                    const dados = await res.json();
+                    render(dados);
+                }
+
+                async function filtrar() {
+                    const tipo = document.getElementById('filtro').value;
+                    const res = await fetch('/maquinas?tipo=' + tipo);
+                    const dados = await res.json();
+                    render(dados);
+                }
+
+                function render(dados) {
+                    const tbody = document.querySelector("#tabela tbody");
+                    tbody.innerHTML = "";
+
+                    dados.forEach(d => {
+                        const linha = `
+                            <tr>
+                                <td>${d.item}</td>
+                                <td>${d.municipio}</td>
+                                <td>R$ ${d.valor.toLocaleString()}</td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += linha;
+                    });
+                }
+
+                carregar();
+            </script>
         </body>
     </html>
     """
-
     return html
