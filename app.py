@@ -50,10 +50,11 @@ def listar_maquinas(tipo=None):
 
 def importar_pncp(termo="caminhao"):
     url = "https://pncp.gov.br/api/consulta/v1/contratos"
+
     params = {
         "pagina": 1,
         "tamanhoPagina": 20,
-        "termo": termo
+        "palavraChave": termo
     }
 
     adicionados = 0
@@ -62,24 +63,35 @@ def importar_pncp(termo="caminhao"):
         response = requests.get(url, params=params, timeout=20)
         data = response.json()
 
+        print("RESPOSTA PNCP:", data)  # debug
+
         for item in data.get("data", []):
             descricao = item.get("objetoCompra", "")
             valor = item.get("valorTotal", 0)
             orgao = item.get("orgaoEntidade", {}).get("razaoSocial", "")
 
             if descricao and valor:
-                cursor.execute(
-                    "INSERT INTO maquinas (item, municipio, valor) VALUES (?, ?, ?)",
-                    (descricao[:150], orgao[:120], float(valor))
-                )
-                adicionados += 1
+
+                cursor.execute("""
+                SELECT COUNT(*) FROM maquinas
+                WHERE item=? AND municipio=? AND valor=?
+                """, (descricao[:150], orgao[:120], float(valor)))
+
+                existe = cursor.fetchone()[0]
+
+                if existe == 0:
+                    cursor.execute(
+                        "INSERT INTO maquinas (item, municipio, valor) VALUES (?, ?, ?)",
+                        (descricao[:150], orgao[:120], float(valor))
+                    )
+                    adicionados += 1
 
         conn.commit()
+
     except Exception as e:
         return {"ok": False, "erro": str(e)}
 
     return {"ok": True, "adicionados": adicionados, "termo": termo}
-
 # ===== ROTAS =====
 @app.get("/")
 def home():
