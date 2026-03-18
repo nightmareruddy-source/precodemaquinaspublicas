@@ -54,8 +54,7 @@ def importar_pncp(termo="caminhao"):
     params = {
         "pagina": 1,
         "tamanhoPagina": 20,
-        "palavraChave": termo
-    }
+        "palavraChave": f"máquina {termo}"
 
     adicionados = 0
 
