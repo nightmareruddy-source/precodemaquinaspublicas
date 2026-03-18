@@ -1,3 +1,4 @@
+from fetcher import main as rodar_fetcher
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 import sqlite3
