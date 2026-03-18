@@ -24,57 +24,41 @@ def health():
 @app.get("/maquinas")
 def maquinas(tipo: str = Query(default=None)):
     with Session(engine) as session:
-        stmt = select(MachineRecord)
+        registros = session.exec(select(MachineRecord)).all()
 
-        if tipo:
-            termo = tipo.lower()
-            registros = session.exec(stmt).all()
+        resultado = []
+        termo = (tipo or "").lower().strip()
 
-            filtrados = []
-            for r in registros:
-                item_name = (r.item_name or "").lower()
-                item_category = (r.item_category or "").lower()
-                municipality = (r.municipality or "").lower()
-                organ_name = (r.organ_name or "").lower()
+        for r in registros:
+            item_name = (r.item_name or "")
+            item_category = (r.item_category or "")
+            municipality = (r.municipality or "")
+            organ_name = (r.organ_name or "")
 
-                if (
-                    termo in item_name
-                    or termo in item_category
-                    or termo in municipality
-                    or termo in organ_name
-                ):
-                    filtrados.append({
-                        "id": r.id,
-                        "item": r.item_name,
-                        "categoria": r.item_category,
-                        "municipio": r.municipality,
-                        "orgao": r.organ_name,
-                        "valor": r.amount_brl,
-                        "ano": r.purchase_year,
-                        "status": r.status,
-                        "fonte": r.source,
-                        "link": r.source_url,
-                    })
+            if termo:
+                texto_busca = " | ".join([
+                    item_name.lower(),
+                    item_category.lower(),
+                    municipality.lower(),
+                    organ_name.lower(),
+                ])
+                if termo not in texto_busca:
+                    continue
 
-            return filtrados
-
-        registros = session.exec(stmt).all()
-
-        return [
-            {
+            resultado.append({
                 "id": r.id,
-                "item": r.item_name,
-                "categoria": r.item_category,
-                "municipio": r.municipality,
-                "orgao": r.organ_name,
+                "item": item_name,
+                "categoria": item_category,
+                "municipio": municipality,
+                "orgao": organ_name,
                 "valor": r.amount_brl,
                 "ano": r.purchase_year,
                 "status": r.status,
                 "fonte": r.source,
                 "link": r.source_url,
-            }
-            for r in registros
-        ]
+            })
+
+        return resultado
 
 
 @app.get("/rodar-fetcher")
@@ -201,26 +185,27 @@ def tabela():
                 }
 
                 function render(dados) {
-                    const tbody = document.querySelector("#tabela tbody");
-                    tbody.innerHTML = "";
+                    const tbody = document.querySelector('#tabela tbody');
+                    tbody.innerHTML = '';
 
-                    dados.forEach(d => {
+                    dados.forEach(function(d) {
                         const linkFonte = d.link
-                            ? `<a href="${d.link}" target="_blank">Abrir</a>`
+                            ? '<a href="' + d.link + '" target="_blank">Abrir</a>'
                             : '';
 
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${d.item || ''}</td>
-                                <td>${d.categoria || ''}</td>
-                                <td>${d.municipio || ''}</td>
-                                <td>${d.orgao || ''}</td>
-                                <td>${formatarValor(d.valor)}</td>
-                                <td>${d.ano || ''}</td>
-                                <td>${d.status || ''}</td>
-                                <td>${linkFonte}</td>
-                            </tr>
-                        `;
+                        const linha =
+                            '<tr>' +
+                                '<td>' + (d.item || '') + '</td>' +
+                                '<td>' + (d.categoria || '') + '</td>' +
+                                '<td>' + (d.municipio || '') + '</td>' +
+                                '<td>' + (d.orgao || '') + '</td>' +
+                                '<td>' + formatarValor(d.valor) + '</td>' +
+                                '<td>' + (d.ano || '') + '</td>' +
+                                '<td>' + (d.status || '') + '</td>' +
+                                '<td>' + linkFonte + '</td>' +
+                            '</tr>';
+
+                        tbody.innerHTML += linha;
                     });
                 }
 
