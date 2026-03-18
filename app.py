@@ -2,7 +2,8 @@ from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 import sqlite3
 import requests
-
+import threading
+import time
 app = FastAPI()
 
 # ===== BANCO =====
@@ -181,3 +182,15 @@ def tabela():
     </html>
     """
     return html
+import threading
+import time
+
+def job_automatico():
+    while True:
+        print("Rodando importação automática...")
+        importar_pncp("caminhao")
+        importar_pncp("retroescavadeira")
+        importar_pncp("motoniveladora")
+        time.sleep(3600)  # roda a cada 1 hora
+
+threading.Thread(target=job_automatico, daemon=True).start()
