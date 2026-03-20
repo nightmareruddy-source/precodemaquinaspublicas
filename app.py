@@ -61,10 +61,14 @@ def maquinas(tipo: str = Query(default=None)):
         return resultado
 
 
-# @app.get("/rodar-fetcher")
-# def rodar_fetcher_manual():
-#     rodar_fetcher()
-#     return {"ok": True, "mensagem": "Fetcher executado"}
+@app.get("/rodar-fetcher")
+def rodar_fetcher_manual():
+    try:
+        from fetcher import main as rodar_fetcher
+        rodar_fetcher()
+        return {"ok": True, "mensagem": "Fetcher executado"}
+    except Exception as e:
+        return {"ok": False, "erro": str(e)}
 
 
 @app.get("/tabela", response_class=HTMLResponse)
