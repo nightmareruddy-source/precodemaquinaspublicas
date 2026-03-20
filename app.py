@@ -1,4 +1,4 @@
-from fetcher import main as rodar_fetcher
+# from fetcher import main as rodar_fetcher
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session, select
@@ -61,10 +61,10 @@ def maquinas(tipo: str = Query(default=None)):
         return resultado
 
 
-@app.get("/rodar-fetcher")
-def rodar_fetcher_manual():
-    rodar_fetcher()
-    return {"ok": True, "mensagem": "Fetcher executado"}
+# @app.get("/rodar-fetcher")
+# def rodar_fetcher_manual():
+#     rodar_fetcher()
+#     return {"ok": True, "mensagem": "Fetcher executado"}
 
 
 @app.get("/tabela", response_class=HTMLResponse)
