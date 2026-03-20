@@ -1,59 +1,34 @@
-from fastapi import FastAPI, Query
-from sqlmodel import Session, select
+from datetime import datetime, date
+from typing import Optional
 
-from database import engine, create_db_and_tables
-from models import MachineRecord
-
-app = FastAPI()
-
-create_db_and_tables()
+from sqlmodel import SQLModel, Field
 
 
-@app.get("/")
-def home():
-    return {"ok": True}
+class MachineRecord(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
 
+    source: str = Field(index=True)
+    source_url: Optional[str] = None
+    source_document_url: Optional[str] = None
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+    item_category: str = Field(index=True)
+    item_name: str = Field(index=True)
 
+    organ_name: str = Field(index=True)
+    municipality: Optional[str] = Field(default=None, index=True)
+    supplier_name: Optional[str] = None
 
-@app.get("/maquinas")
-def maquinas(tipo: str = Query(default=None)):
-    with Session(engine) as session:
-        registros = session.exec(select(MachineRecord)).all()
+    contract_type: str = Field(index=True)
+    process_number: Optional[str] = None
+    ata_number: Optional[str] = None
 
-        resultado = []
-        termo = (tipo or "").lower().strip()
+    purchase_year: Optional[int] = Field(default=None, index=True)
+    amount_brl: Optional[float] = None
 
-        for r in registros:
-            item_name = (r.item_name or "")
-            item_category = (r.item_category or "")
-            municipality = (r.municipality or "")
-            organ_name = (r.organ_name or "")
+    validity_start: Optional[date] = None
+    validity_end: Optional[date] = None
 
-            if termo:
-                texto_busca = " | ".join([
-                    item_name.lower(),
-                    item_category.lower(),
-                    municipality.lower(),
-                    organ_name.lower(),
-                ])
-                if termo not in texto_busca:
-                    continue
+    status: str = Field(default="desconhecido", index=True)
+    raw_excerpt: Optional[str] = None
 
-            resultado.append({
-                "id": r.id,
-                "item": item_name,
-                "categoria": item_category,
-                "municipio": municipality,
-                "orgao": organ_name,
-                "valor": r.amount_brl,
-                "ano": r.purchase_year,
-                "status": r.status,
-                "fonte": r.source,
-                "link": r.source_url,
-            })
-
-        return resultado
+    created_at: datetime = Field(default_factory=datetime.utcnow)
