@@ -1,34 +1,30 @@
-from datetime import datetime, date
 from typing import Optional
-
 from sqlmodel import SQLModel, Field
 
 
 class MachineRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    source: str = Field(index=True)
-    source_url: Optional[str] = None
-    source_document_url: Optional[str] = None
+    source: str
+    source_url: str
 
-    item_category: str = Field(index=True)
-    item_name: str = Field(index=True)
+    item_category: Optional[str] = None
+    item_name: Optional[str] = None
 
-    organ_name: str = Field(index=True)
-    municipality: Optional[str] = Field(default=None, index=True)
+    organ_name: Optional[str] = None
+    municipality: Optional[str] = None
+
     supplier_name: Optional[str] = None
 
-    contract_type: str = Field(index=True)
+    contract_type: Optional[str] = None
     process_number: Optional[str] = None
     ata_number: Optional[str] = None
 
-    purchase_year: Optional[int] = Field(default=None, index=True)
+    purchase_year: Optional[int] = None
     amount_brl: Optional[float] = None
 
-    validity_start: Optional[date] = None
-    validity_end: Optional[date] = None
+    validity_start: Optional[str] = None
+    validity_end: Optional[str] = None
 
-    status: str = Field(default="desconhecido", index=True)
+    status: Optional[str] = None
     raw_excerpt: Optional[str] = None
-
-    created_at: datetime = Field(default_factory=datetime.utcnow)
