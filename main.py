@@ -1,13 +1,11 @@
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
-from sqlmodel import Session, select
 
-from database import engine, create_db_and_tables
-from models import MachineRecord
+from database import get_conn, create_db
 
 app = FastAPI(title="Preço de Máquinas Públicas", version="1.0.0")
 
-create_db_and_tables()
+create_db()
 
 
 @app.get("/")
@@ -17,47 +15,51 @@ def home():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "arquivo": "main_novo"}
+    return {"status": "ok", "arquivo": "main_sqlite_puro"}
 
 
 @app.get("/maquinas")
 def maquinas(tipo: str = Query(default=None)):
-    with Session(engine) as session:
-        registros = session.exec(select(MachineRecord)).all()
+    conn = get_conn()
+    cur = conn.cursor()
 
-        resultado = []
-        termo = (tipo or "").lower().strip()
+    cur.execute("SELECT * FROM maquinas ORDER BY id DESC")
+    rows = cur.fetchall()
+    conn.close()
 
-        for r in registros:
-            item_name = (r.item_name or "")
-            item_category = (r.item_category or "")
-            municipality = (r.municipality or "")
-            organ_name = (r.organ_name or "")
+    termo = (tipo or "").lower().strip()
+    resultado = []
 
-            if termo:
-                texto_busca = " | ".join([
-                    item_name.lower(),
-                    item_category.lower(),
-                    municipality.lower(),
-                    organ_name.lower(),
-                ])
-                if termo not in texto_busca:
-                    continue
+    for r in rows:
+        item_name = r["item_name"] or ""
+        item_category = r["item_category"] or ""
+        municipality = r["municipality"] or ""
+        organ_name = r["organ_name"] or ""
 
-            resultado.append({
-                "id": r.id,
-                "item": item_name,
-                "categoria": item_category,
-                "municipio": municipality,
-                "orgao": organ_name,
-                "valor": r.amount_brl,
-                "ano": r.purchase_year,
-                "status": r.status,
-                "fonte": r.source,
-                "link": r.source_url,
-            })
+        if termo:
+            texto_busca = " | ".join([
+                item_name.lower(),
+                item_category.lower(),
+                municipality.lower(),
+                organ_name.lower(),
+            ])
+            if termo not in texto_busca:
+                continue
 
-        return resultado
+        resultado.append({
+            "id": r["id"],
+            "item": item_name,
+            "categoria": item_category,
+            "municipio": municipality,
+            "orgao": organ_name,
+            "valor": r["amount_brl"],
+            "ano": r["purchase_year"],
+            "status": r["status"],
+            "fonte": r["source"],
+            "link": r["source_url"],
+        })
+
+    return resultado
 
 
 @app.get("/rodar-fetcher")
