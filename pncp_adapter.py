@@ -1,34 +1,64 @@
-from datetime import datetime, date
-from typing import Optional
+"""Adaptador PNCP.
 
-from sqlmodel import SQLModel, Field
+Mantém a chamada isolada para a API pública de consulta do PNCP.
+Se o endpoint ou o nome do parâmetro de busca mudar, ajuste por variável
+ambiente sem reescrever o coletor.
+"""
+from __future__ import annotations
+
+from typing import Any, Iterable
+import os
+
+import requests
+
+PNCP_BASE_URL = os.getenv("PNCP_BASE_URL", "https://pncp.gov.br/api/consulta")
+TIMEOUT = int(os.getenv("PNCP_TIMEOUT", "60"))
+PNCP_SEARCH_ENDPOINT = os.getenv("PNCP_SEARCH_ENDPOINT", "/v1/contratacoes/publicacao")
+PNCP_QUERY_PARAM = os.getenv("PNCP_QUERY_PARAM", "palavraChave")
+
+KEYWORDS = [
+    "escavadeira hidráulica",
+    "pá carregadeira",
+    "motoniveladora",
+    "retroescavadeira",
+    "rolo compactador",
+    "caminhão caçamba",
+    "caminhão pipa",
+    "caminhão coletor de lixo",
+    "caminhão chassi",
+    "caminhão carroceria",
+    "caminhão toco",
+]
 
 
-class MachineRecord(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+def search_pncp(keyword: str, page: int = 1, page_size: int = 50) -> dict[str, Any]:
+    url = f"{PNCP_BASE_URL.rstrip('/')}{PNCP_SEARCH_ENDPOINT}"
+    params: dict[str, Any] = {
+        "pagina": page,
+        "tamanhoPagina": page_size,
+        PNCP_QUERY_PARAM: keyword,
+    }
+    response = requests.get(url, params=params, timeout=TIMEOUT)
+    response.raise_for_status()
+    payload = response.json()
+    if not isinstance(payload, dict):
+        return {"data": []}
+    return payload
 
-    source: str = Field(index=True)
-    source_url: Optional[str] = None
-    source_document_url: Optional[str] = None
 
-    item_category: str = Field(index=True)
-    item_name: str = Field(index=True)
+def iter_results(payload: dict[str, Any]) -> Iterable[dict[str, Any]]:
+    for key in ("data", "items", "resultado", "resultados"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    yield item
+            return
 
-    organ_name: str = Field(index=True)
-    municipality: Optional[str] = Field(default=None, index=True)
-    supplier_name: Optional[str] = None
-
-    contract_type: str = Field(index=True)
-    process_number: Optional[str] = None
-    ata_number: Optional[str] = None
-
-    purchase_year: Optional[int] = Field(default=None, index=True)
-    amount_brl: Optional[float] = None
-
-    validity_start: Optional[date] = None
-    validity_end: Optional[date] = None
-
-    status: str = Field(default="desconhecido", index=True)
-    raw_excerpt: Optional[str] = None
-
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    nested = payload.get("data")
+    if isinstance(nested, dict):
+        for value in nested.values():
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        yield item

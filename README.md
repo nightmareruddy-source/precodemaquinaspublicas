@@ -1,46 +1,38 @@
-# Preço de Máquinas Públicas — MVP inicial
+# Preço de Máquinas Públicas
 
-MVP inicial do projeto `precodemaquinaspublicas.com.br`.
+MVP para consulta de preços públicos e atas de máquinas e caminhões.
 
-## Objetivo
-Consultar **atas de registro de preços** e **preços históricos de compras públicas** para:
-- escavadeira hidráulica
-- pá carregadeira
-- motoniveladora
-- retroescavadeira
-- rolo compactador
-- caminhões (caçamba, pipa, coletor, chassi, carroceria, toco)
+## Estrutura atual
+- `main.py` -> app principal FastAPI
+- `database.py` -> conexão SQLite/SQLModel
+- `models.py` -> schema `MachineRecord`
+- `pncp_adapter.py` -> integração PNCP
+- `fetcher.py` -> coletor separado
 
-## Stack
-- FastAPI
-- SQLModel + SQLite
-- Python requests
-- HTML simples para o frontend
+## Requisitos
+- Python 3.11+
+- Render ou ambiente compatível
 
 ## Rodando localmente
 ```bash
-cd backend
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate    # Windows
 pip install -r requirements.txt
-python import_seed.py
 uvicorn main:app --reload
 ```
-Depois abra `http://localhost:8000`.
 
-## Usando Docker
+## Start Command no Render
 ```bash
-docker compose up
+uvicorn main:app --host 0.0.0.0 --port $PORT
 ```
 
-## Importando dados reais do PNCP
-1. Copie `.env.example` para `.env`.
-2. Ajuste `PNCP_SEARCH_ENDPOINT` conforme o endpoint escolhido no Swagger do PNCP.
-3. Rode:
-```bash
-cd backend
-python fetcher.py
-```
+## Endpoints
+- `/health` -> status da aplicação
+- `/maquinas` -> lista registros do banco
+- `/maquinas?tipo=retro` -> filtro simples
+- `/tabela` -> interface web básica
 
-## Observação importante
-Este pacote **não está implantado em produção**. Ele é um MVP local para você ou um técnico publicar em hospedagem.
+## Coleta
+O `fetcher.py` deve ser executado separadamente do app.
+Primeiro estabilize o site. Depois teste a coleta isolada.
