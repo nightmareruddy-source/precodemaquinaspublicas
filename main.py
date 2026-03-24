@@ -17,7 +17,7 @@ def home():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "arquivo": "main_novo"}
 
 
 @app.get("/maquinas")
