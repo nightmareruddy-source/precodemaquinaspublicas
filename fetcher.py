@@ -276,13 +276,20 @@ def ingest_keyword(keyword: str) -> int:
     conn = get_conn()
     cur = conn.cursor()
 
+    total_recebidos = 0
+    total_categorizados = 0
+
     for item in iter_results(payload):
+        total_recebidos += 1
+
         text_parts = flatten_values(item)
         joined = " | ".join(text_parts)
 
         category = normalize_category(joined)
         if not category:
             continue
+
+        total_categorizados += 1
 
         source_url = (
             item.get("linkSistemaOrigem")
@@ -329,8 +336,9 @@ def ingest_keyword(keyword: str) -> int:
 
     conn.commit()
     conn.close()
-    return inserted
 
+    print(f"[{keyword}] recebidos={total_recebidos} categorizados={total_categorizados} inseridos={inserted}")
+    return inserted
 
 def main() -> None:
     create_db()
