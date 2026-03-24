@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
-import os
 import requests
 
-PNCP_BASE_URL = os.getenv("PNCP_BASE_URL", "https://pncp.gov.br/api/consulta")
-TIMEOUT = int(os.getenv("PNCP_TIMEOUT", "60"))
-PNCP_SEARCH_ENDPOINT = os.getenv("PNCP_SEARCH_ENDPOINT", "/v1/contratacoes/publicacao")
-PNCP_QUERY_PARAM = os.getenv("PNCP_QUERY_PARAM", "palavraChave")
+TIMEOUT = 60
 
 KEYWORDS = [
     "escavadeira hidráulica",
@@ -25,11 +21,12 @@ KEYWORDS = [
 
 
 def search_pncp(keyword: str, page: int = 1, page_size: int = 50) -> dict[str, Any]:
-    url = f"{PNCP_BASE_URL.rstrip('/')}{PNCP_SEARCH_ENDPOINT}"
+    url = "https://pncp.gov.br/pncp-api/v1/orgaos/consulta"
+
     params = {
         "pagina": page,
         "tamanhoPagina": page_size,
-        PNCP_QUERY_PARAM: keyword,
+        "palavraChave": keyword,
     }
 
     response = requests.get(url, params=params, timeout=TIMEOUT)
