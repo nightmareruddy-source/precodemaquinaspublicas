@@ -1,14 +1,7 @@
-"""Adaptador PNCP.
-
-Mantém a chamada isolada para a API pública de consulta do PNCP.
-Se o endpoint ou o nome do parâmetro de busca mudar, ajuste por variável
-ambiente sem reescrever o coletor.
-"""
 from __future__ import annotations
 
 from typing import Any, Iterable
 import os
-
 import requests
 
 PNCP_BASE_URL = os.getenv("PNCP_BASE_URL", "https://pncp.gov.br/api/consulta")
@@ -33,13 +26,15 @@ KEYWORDS = [
 
 def search_pncp(keyword: str, page: int = 1, page_size: int = 50) -> dict[str, Any]:
     url = f"{PNCP_BASE_URL.rstrip('/')}{PNCP_SEARCH_ENDPOINT}"
-    params: dict[str, Any] = {
+    params = {
         "pagina": page,
         "tamanhoPagina": page_size,
         PNCP_QUERY_PARAM: keyword,
     }
+
     response = requests.get(url, params=params, timeout=TIMEOUT)
     response.raise_for_status()
+
     payload = response.json()
     if not isinstance(payload, dict):
         return {"data": []}
@@ -55,9 +50,8 @@ def iter_results(payload: dict[str, Any]) -> Iterable[dict[str, Any]]:
                     yield item
             return
 
-    nested = payload.get("data")
-    if isinstance(nested, dict):
-        for value in nested.values():
+    if isinstance(payload.get("data"), dict):
+        for _, value in payload["data"].items():
             if isinstance(value, list):
                 for item in value:
                     if isinstance(item, dict):
