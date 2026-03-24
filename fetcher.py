@@ -126,20 +126,36 @@ def main() -> None:
 
         categorizados += 1
 
+        ano_compra = item.get("anoCompra")
+        try:
+            purchase_year = int(ano_compra) if ano_compra is not None else None
+        except (ValueError, TypeError):
+            purchase_year = None
+
+        valor_total = item.get("valorTotal")
+        try:
+            amount_brl = float(valor_total) if valor_total is not None else None
+        except (ValueError, TypeError):
+            amount_brl = None
+
         registro = {
             "source": "compras_gov_arp",
             "source_url": as_text(item.get("linkAtaPNCP")) or "",
             "source_document_url": as_text(item.get("linkCompraPNCP")),
             "item_category": categoria,
             "item_name": objeto[:255] if objeto else categoria,
-            "organ_name": as_text(item.get("nomeOrgao")) or as_text(item.get("nomeUnidadeGerenciadora")) or "Órgão não identificado",
+            "organ_name": (
+                as_text(item.get("nomeOrgao"))
+                or as_text(item.get("nomeUnidadeGerenciadora"))
+                or "Órgão não identificado"
+            ),
             "municipality": None,
             "supplier_name": None,
             "contract_type": "ata",
             "process_number": as_text(item.get("numeroCompra")),
             "ata_number": as_text(item.get("numeroAtaRegistroPreco")),
-            "purchase_year": int(item["anoCompra"]) if as_text(item.get("anoCompra")) and str(item.get("anoCompra")).isdigit() else None,
-            "amount_brl": float(item["valorTotal"]) if item.get("valorTotal") is not None else None,
+            "purchase_year": purchase_year,
+            "amount_brl": amount_brl,
             "validity_start": as_text(item.get("dataVigenciaInicial")),
             "validity_end": as_text(item.get("dataVigenciaFinal")),
             "status": as_text(item.get("statusAta")) or "desconhecido",
