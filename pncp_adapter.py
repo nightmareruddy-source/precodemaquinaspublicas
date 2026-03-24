@@ -5,61 +5,36 @@ import requests
 
 TIMEOUT = 60
 
-KEYWORDS = [
-    "escavadeira hidráulica",
-    "pá carregadeira",
-    "motoniveladora",
-    "retroescavadeira",
-    "rolo compactador",
-    "caminhão caçamba",
-    "caminhão pipa",
-    "caminhão coletor de lixo",
-    "caminhão chassi",
-    "caminhão carroceria",
-    "caminhão toco",
-]
+# Busca por janela de vigência, como a API oficial exige
+DEFAULT_DATA_INICIAL = "2025-01-01"
+DEFAULT_DATA_FINAL = "2026-12-31"
 
 
-def search_pncp(keyword: str, page: int = 1, page_size: int = 20) -> dict[str, Any]:
-    url = "https://pncp.gov.br/pncp-api/v1/orgaos/consulta"
+def search_atas(page: int = 1, page_size: int = 50) -> dict[str, Any]:
+    url = "https://dadosabertos.compras.gov.br/modulo-arp/1_consultarARP"
 
     params = {
         "pagina": page,
         "tamanhoPagina": page_size,
-        "palavraChave": keyword,
+        "dataVigenciaInicialMin": DEFAULT_DATA_INICIAL,
+        "dataVigenciaInicialMax": DEFAULT_DATA_FINAL,
     }
 
     response = requests.get(url, params=params, timeout=TIMEOUT)
     response.raise_for_status()
-
     payload = response.json()
 
-    print("URL usada:", response.url)
-    print("Tipo do payload:", type(payload).__name__)
+    if not isinstance(payload, dict):
+        return {"resultado": []}
 
-    if isinstance(payload, dict):
-        print("Chaves do payload:", list(payload.keys())[:20])
-
-    return payload if isinstance(payload, dict) else {"data": []}
+    return payload
 
 
 def iter_results(payload: dict[str, Any]) -> Iterable[dict[str, Any]]:
-    for key in ("data", "items", "resultado", "resultados"):
+    for key in ("resultado", "data", "items", "resultados"):
         value = payload.get(key)
         if isinstance(value, list):
-            print(f"Lista encontrada em '{key}' com", len(value), "itens")
             for item in value:
                 if isinstance(item, dict):
                     yield item
             return
-
-    if isinstance(payload.get("data"), dict):
-        for chave, value in payload["data"].items():
-            if isinstance(value, list):
-                print(f"Lista encontrada em 'data[{chave}]' com", len(value), "itens")
-                for item in value:
-                    if isinstance(item, dict):
-                        yield item
-                return
-
-    print("Nenhuma lista de resultados encontrada.")
